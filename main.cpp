@@ -3,19 +3,25 @@
 #include <Windows.h> //Win API
 
 //Path for the Binary file to be saved
-std::string path = "S:\\data\\data.bin";
+std::string path = "data.bin";
+
 
 //Time class for better data management
 class Time {
 
 public:
 	int date = 0;
+	int month = 0;
+	int year = 0;
 	int hour = 0;
 	int minute = 0;
 	int second = 0;
 
 	void printTime() {
 		std::cout << hour << ":" << minute << ":" << second << std::endl;
+	}
+	void printDate() {
+		std::cout << date << "-" << month << "-" << year << std::endl;
 	}
 
 	void incrementTime() {
@@ -36,6 +42,8 @@ public:
 		GetLocalTime(&systemtime);
 
 		date = systemtime.wDay;
+		month = systemtime.wMonth;
+		year = systemtime.wYear;
 		hour = systemtime.wHour;
 		minute = systemtime.wMinute;
 		second = systemtime.wSecond;
@@ -60,10 +68,32 @@ public:
 		GetLocalTime(&systemtime);
 
 		date = systemtime.wDay;
+		month = systemtime.wMonth;
+		year = systemtime.wYear;
 		hour = 0;
 		minute = 0;
 		second = 0;
 	}
+};
+
+class SaveData {
+public:
+	Time Screetime;
+	int reboots = 0;
+
+	void printData() {
+		std::cout << "\n########################\n";
+		std::cout << "Date :";
+		Screetime.printDate();
+		std::cout << "------------------------\n";
+		std::cout << "Screen Time: ";
+		Screetime.printTime();
+		std::cout << "------------------------\n";
+		std::cout << "Number Of Reboots: " << reboots << std::endl;
+		std::cout << "########################\n";
+	}
+
+
 };
 
 //Returns true if file exists
@@ -73,47 +103,62 @@ bool fileExists(std::string filename) {
 }
 
 //Saves Time object into the .bin
-int saveData(Time time) {
+int saveData(Time time, int reboots) {
+	
+	SaveData data;
+	data.Screetime = time;
+	data.reboots = reboots;
+
 	std::ofstream outfile(path, std::ios::binary);
 	if (outfile.is_open()) {
-		outfile.write(reinterpret_cast<char*>(&time), sizeof(time));
+		outfile.write(reinterpret_cast<char*>(&data), sizeof(data));
 	}
 	outfile.close();
 	return 0;
 }
 
 //Retrives Time from the .bin file
-Time retrieveData() {
+SaveData retrieveData() {
 	std::ifstream infile(path, std::ios::binary);
 
 	if (infile.is_open()) {
 		// Create an object of MyClass to store the read data
-		Time time;
-		infile.read(reinterpret_cast<char*>(&time), sizeof(time));
+		SaveData data;
+		infile.read(reinterpret_cast<char*>(&data), sizeof(data));
 		infile.close();
-		return time;
+		return data;
 	}
 }
-
+SaveData data;
 //Initializes default variables
-void initialize(Time& ScreenTime, Time& StartTime, std::string path) {
+void initialize(Time& ScreenTime, Time& StartTime, int& reboots, std::string path) {
 
+	
 	//Default initialization 
 	StartTime.getCurrentTime();
 	ScreenTime.inititializeDate();
 
 	if (fileExists(path)) {
 		//Retrive data if file exists
-		ScreenTime = retrieveData();
+		data = retrieveData();
+		data.printData();
+		ScreenTime = data.Screetime;
+		reboots = data.reboots;
+		reboots++;
+	}
+	else {
+		data.Screetime.getCurrentDate();
 	}
 }
+
+
 
 int main() {
 
 	//Initialization
 	Time ScreenTime, StartTime, CurrentTime;
-	int SyncTime = 1;
-	initialize(ScreenTime, StartTime, path);
+	int SyncTime = 1, reboots = 0;
+	initialize(ScreenTime, StartTime, reboots, path);
 
 	//Loops until program is terminated
 	while (true)
@@ -138,10 +183,10 @@ int main() {
 			ScreenTime.reset();
 			ScreenTime.inititializeDate();
 		}
-
+		data.printData();
 		Sleep(SyncTime * 1000);
 		ScreenTime.incrementTime();
-		saveData(ScreenTime);
+		saveData(ScreenTime, reboots);
 
 		system("cls");
 
