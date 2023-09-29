@@ -2,7 +2,7 @@
 #include <fstream>
 #include <Windows.h>
 
-
+std::string path = "S:\\data\\data.bin";
 class Time {
 public:
 	int date = 0;
@@ -62,13 +62,13 @@ public:
 	}
 };
 
-bool fileExists(const char* filename) {
+bool fileExists(std::string filename) {
 	std::ifstream infile(filename);
 	return infile.good();
 }
 
 int saveData(Time time) {
-	std::ofstream outfile("data.bin", std::ios::binary);
+	std::ofstream outfile(path, std::ios::binary);
 	if (outfile.is_open()) {
 		// Write the array to the file
 		outfile.write(reinterpret_cast<char*>(&time), sizeof(time));
@@ -80,7 +80,7 @@ int saveData(Time time) {
 
 
 Time retrieveData() {
-	std::ifstream infile("data.bin", std::ios::binary);
+	std::ifstream infile(path, std::ios::binary);
 
 	if (infile.is_open()) {
 		// Create an object of MyClass to store the read data
@@ -99,7 +99,7 @@ int main() {
 	StartTime.getCurrentTime();
 	ScreenTime.inititializeDate();
 
-	bool FileExists = fileExists("data.bin");
+	bool FileExists = fileExists(path);
 
 	if (FileExists) {
 		ScreenTime = retrieveData();
@@ -112,7 +112,8 @@ int main() {
 
 
 	while (true)
-	{
+	{	
+		StartTime.getCurrentTime();
 		std::cout << "######################" << std::endl;
 		std::cout << "DIGITAL WELLBEING" << std::endl;
 		std::cout << "######################\n\n";
@@ -120,9 +121,13 @@ int main() {
 		StartTime.printTime();
 		std::cout << "Screen Time: ";
 		ScreenTime.printTime();
-
+		if (StartTime.date != ScreenTime.date) {
+			ScreenTime.reset();
+			ScreenTime.inititializeDate();
+		}
 		Sleep(SyncTime * 1000);
 		ScreenTime.incrementTime();
+		
 		saveData(ScreenTime);
 
 		system("cls");
