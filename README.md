@@ -20,5 +20,3 @@ After running the executable, the program will record screen time and reboot sta
 ## License
 This project is open source, feel free to use it, distribute it and contribute.
 
-## Acknowledgments
-Project based on an assignment provided by [Your Name] or [Company Name]
