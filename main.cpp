@@ -1,10 +1,8 @@
 #include <iostream> //Std IO
 #include <fstream> //Data handling
 #include <Windows.h> //Win API
-
 //Path for the Binary file to be saved
 std::string path = "data.bin";
-
 
 //Time class for better data management
 class Time {
@@ -96,6 +94,42 @@ public:
 
 };
 
+// Function to show a notification
+void ShowNotification(const std::wstring& title, const std::wstring& message, int time) {
+	// Initialize COM for this thread
+	CoInitialize(0);
+
+	// Create the notification icon
+	NOTIFYICONDATAW nid;
+	ZeroMemory(&nid, sizeof(NOTIFYICONDATAW));
+	nid.cbSize = sizeof(NOTIFYICONDATAW);
+	nid.hWnd = GetConsoleWindow(); // Assuming it's a console application
+	nid.uID = 1;
+	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+	nid.uCallbackMessage = WM_USER + 1;
+	nid.hIcon = LoadIconW(NULL, IDI_INFORMATION);
+
+	// Convert string data to wide characters
+	wcsncpy_s(nid.szTip, _countof(nid.szTip), L"Notification Tip", _TRUNCATE);
+
+	// Add the notification
+	Shell_NotifyIconW(NIM_ADD, &nid);
+
+	// Show the notification
+	nid.uFlags = NIF_INFO;
+	wcsncpy_s(nid.szInfoTitle, _countof(nid.szInfoTitle), title.c_str(), _TRUNCATE);
+	wcsncpy_s(nid.szInfo, _countof(nid.szInfo), message.c_str(), _TRUNCATE);
+	nid.dwInfoFlags = NIIF_INFO;
+	nid.uTimeout = time * 1000; // Display time in milliseconds
+
+	Shell_NotifyIconW(NIM_MODIFY, &nid);
+
+	// Remove the notification
+	Shell_NotifyIconW(NIM_DELETE, &nid);
+
+	// Uninitialize COM for this thread
+	CoUninitialize();
+}
 //Returns true if file exists
 bool fileExists(std::string filename) {
 	std::ifstream infile(filename);
@@ -133,7 +167,7 @@ SaveData data;
 //Initializes default variables
 void initialize(Time& ScreenTime, Time& StartTime, int& reboots, std::string path) {
 
-	
+	data.Screetime.inititializeDate();
 	//Default initialization 
 	StartTime.getCurrentTime();
 	ScreenTime.inititializeDate();
@@ -144,20 +178,23 @@ void initialize(Time& ScreenTime, Time& StartTime, int& reboots, std::string pat
 		data.printData();
 		ScreenTime = data.Screetime;
 		reboots = data.reboots;
-		reboots++;
+		
 	}
 	else {
 		data.Screetime.getCurrentDate();
 	}
+	reboots++;
 }
 
 
 
 int main() {
-
+	HWND consoleWindow = GetConsoleWindow();
+	SetConsoleTitle(L"Digital Wellbeing");
+	
 	//Initialization
 	Time ScreenTime, StartTime, CurrentTime;
-	int SyncTime = 1, reboots = 0;
+	int SyncTime = 1, reboots = 0, notif = 0;
 	initialize(ScreenTime, StartTime, reboots, path);
 
 	//Loops until program is terminated
@@ -183,6 +220,17 @@ int main() {
 			ScreenTime.reset();
 			ScreenTime.inititializeDate();
 		}
+
+		if(ScreenTime.minute == 0){
+			notif = 0;
+		}
+		else {
+			if (ScreenTime.minute != notif) {
+				ShowNotification(L"BAZZINGA", L"1 minute has passed!", 6);
+				notif++;
+			}
+		}
+
 		data.printData();
 		Sleep(SyncTime * 1000);
 		ScreenTime.incrementTime();
