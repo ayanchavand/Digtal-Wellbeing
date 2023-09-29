@@ -1,9 +1,13 @@
-#include <iostream>
-#include <fstream>
-#include <Windows.h>
+#include <iostream> //Std IO
+#include <fstream> //Data handling
+#include <Windows.h> //Win API
 
+//Path for the Binary file to be saved
 std::string path = "S:\\data\\data.bin";
+
+//Time class for better data management
 class Time {
+
 public:
 	int date = 0;
 	int hour = 0;
@@ -62,23 +66,23 @@ public:
 	}
 };
 
+//Returns true if file exists
 bool fileExists(std::string filename) {
 	std::ifstream infile(filename);
 	return infile.good();
 }
 
+//Saves Time object into the .bin
 int saveData(Time time) {
 	std::ofstream outfile(path, std::ios::binary);
 	if (outfile.is_open()) {
-		// Write the array to the file
 		outfile.write(reinterpret_cast<char*>(&time), sizeof(time));
-		return 0;
 	}
-	// Close the file
 	outfile.close();
+	return 0;
 }
 
-
+//Retrives Time from the .bin file
 Time retrieveData() {
 	std::ifstream infile(path, std::ios::binary);
 
@@ -91,48 +95,56 @@ Time retrieveData() {
 	}
 }
 
-int main() {
+//Initializes default variables
+void initialize(Time& ScreenTime, Time& StartTime, std::string path) {
 
-	Time ScreenTime, StartTime;
-	int SyncTime = 1;
-
+	//Default initialization 
 	StartTime.getCurrentTime();
 	ScreenTime.inititializeDate();
 
-	bool FileExists = fileExists(path);
-
-	if (FileExists) {
+	if (fileExists(path)) {
+		//Retrive data if file exists
 		ScreenTime = retrieveData();
-		if (StartTime.date != ScreenTime.date) {
-			ScreenTime.reset();
-			ScreenTime.inititializeDate();
-		}
 	}
+}
 
+int main() {
 
+	//Initialization
+	Time ScreenTime, StartTime, CurrentTime;
+	int SyncTime = 1;
+	initialize(ScreenTime, StartTime, path);
 
+	//Loops until program is terminated
 	while (true)
 	{	
-		StartTime.getCurrentTime();
+		CurrentTime.getCurrentTime();
+
 		std::cout << "######################" << std::endl;
 		std::cout << "DIGITAL WELLBEING" << std::endl;
 		std::cout << "######################\n\n";
+
 		std::cout << "Session Started At: ";
 		StartTime.printTime();
+
+		std::cout << "Current Time: ";
+		CurrentTime.printTime();
+
 		std::cout << "Screen Time: ";
 		ScreenTime.printTime();
-		if (StartTime.date != ScreenTime.date) {
+
+		//Resets the screen time if data has changed
+		if (CurrentTime.date != ScreenTime.date) {
 			ScreenTime.reset();
 			ScreenTime.inititializeDate();
 		}
+
 		Sleep(SyncTime * 1000);
 		ScreenTime.incrementTime();
-		
 		saveData(ScreenTime);
 
 		system("cls");
 
 	}
-
 	return 0;
 }
