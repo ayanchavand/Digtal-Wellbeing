@@ -236,6 +236,7 @@ int main() {
 		std::cout << "Session Started At: ";
 		StartTime.printTime();
 
+
 		std::cout << "Current Time: ";
 		CurrentTime.printTime();
 
