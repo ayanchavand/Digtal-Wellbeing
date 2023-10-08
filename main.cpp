@@ -47,6 +47,30 @@ public:
 		second = systemtime.wSecond;
 	}
 
+	std::wstring returnTimeAsWstring() {
+		
+		std::wstring string;
+		string.append(std::to_wstring(hour));
+		string.append(L":");
+		string.append(std::to_wstring(minute));
+		string.append(L":");
+		string.append(std::to_wstring(second));
+
+		return string;
+	}
+
+	std::wstring returnDateAsWstring() {
+
+		std::wstring string;
+		string.append(std::to_wstring(date));
+		string.append(L"-");
+		string.append(std::to_wstring(month));
+		string.append(L"-");
+		string.append(std::to_wstring(year));
+
+		return string;
+	}
+
 	void getCurrentDate() {
 		SYSTEMTIME systemtime;
 		GetLocalTime(&systemtime);
@@ -95,9 +119,11 @@ public:
 };
 
 // Function to show a notification
-void ShowNotification(const std::wstring& title, const std::wstring& message, int time) {
+void ShowNotification(const std::wstring& title, const std::wstring& message, int time, const std::wstring& soundPath) {
 	// Initialize COM for this thread
 	CoInitialize(0);
+
+	PlaySound(soundPath.c_str(), NULL, SND_FILENAME | SND_ASYNC);
 
 	// Create the notification icon
 	NOTIFYICONDATAW nid;
@@ -175,10 +201,8 @@ void initialize(Time& ScreenTime, Time& StartTime, int& reboots, std::string pat
 	if (fileExists(path)) {
 		//Retrive data if file exists
 		data = retrieveData();
-		data.printData();
 		ScreenTime = data.Screetime;
 		reboots = data.reboots;
-		
 	}
 	else {
 		data.Screetime.getCurrentDate();
@@ -187,16 +211,18 @@ void initialize(Time& ScreenTime, Time& StartTime, int& reboots, std::string pat
 }
 
 
-
 int main() {
 	HWND consoleWindow = GetConsoleWindow();
 	SetConsoleTitle(L"Digital Wellbeing");
-	
+	if (!ShowWindow(consoleWindow, 0)) {
+
+		std::cout << "Error minimizing " << std::endl;
+	}
 	//Initialization
 	Time ScreenTime, StartTime, CurrentTime;
 	int SyncTime = 1, reboots = 0, notif = 0;
 	initialize(ScreenTime, StartTime, reboots, path);
-
+	ShowNotification(L"Digital Wellbeing Is Active", L"Have A Great Day", 10, L"untitled.wav");
 	//Loops until program is terminated
 	while (true)
 	{	
@@ -217,16 +243,23 @@ int main() {
 
 		//Resets the screen time if data has changed
 		if (CurrentTime.date != ScreenTime.date) {
+			std::wstring title = L"Stats for ";
+			std::wstring des = L"Your Screen time was ";
+
+			title.append(ScreenTime.returnDateAsWstring());
+			des.append(ScreenTime.returnTimeAsWstring());
+			ShowNotification(title, des, 6, L"ringtone.wav");
 			ScreenTime.reset();
 			ScreenTime.inititializeDate();
+			
 		}
 
-		if(ScreenTime.minute == 0){
-			notif = 0;
+		if(ScreenTime.hour == 0){
+			notif = ScreenTime.hour;
 		}
 		else {
-			if (ScreenTime.minute != notif) {
-				ShowNotification(L"BAZZINGA", L"1 minute has passed!", 6);
+			if (ScreenTime.hour != notif) {
+				ShowNotification(L"Time To Stretch", L"You have been sitting for one hour :<", 6, L"untitled.wav");
 				notif++;
 			}
 		}
