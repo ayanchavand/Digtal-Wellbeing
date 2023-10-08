@@ -1,8 +1,9 @@
 #include <iostream> //Std IO
 #include <fstream> //Data handling
 #include <Windows.h> //Win API
+#include<string>
 //Path for the Binary file to be saved
-std::string path = "data.bin";
+std::string path = "S:\\data\\data.bin";
 
 //Time class for better data management
 class Time {
@@ -222,7 +223,7 @@ int main() {
 	Time ScreenTime, StartTime, CurrentTime;
 	int SyncTime = 1, reboots = 0, notif = 0;
 	initialize(ScreenTime, StartTime, reboots, path);
-	ShowNotification(L"Digital Wellbeing Is Active", L"Have A Great Day", 10, L"untitled.wav");
+	ShowNotification(L"Digital Wellbeing Is Active", L"Have A Great Day", 20, L"notification.wav");
 	//Loops until program is terminated
 	while (true)
 	{	
